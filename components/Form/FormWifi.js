@@ -16,7 +16,7 @@ class FormWifi extends React.Component {
     handleSubmit = (e) => {
         e.preventDefault();
         const values = this.props.form.getFieldsValue();
-        fetch('http://localhost:3000/api/wlan/connect', {
+        fetch(`${process.env.APP_HOST}/api/wlan/connect`, {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json"

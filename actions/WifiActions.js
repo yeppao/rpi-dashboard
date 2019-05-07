@@ -2,7 +2,7 @@ import React from 'react';
 
 class WifiActions {
     static async scan() {
-        const res = await fetch('http://localhost:3000/api/wlan/scan');
+        const res = await fetch(`${process.env.APP_HOST}/api/wlan/scan`);
         return res.json();
     }
 };

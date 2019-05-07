@@ -10,9 +10,7 @@ const wpa_cli = require('wireless-tools/wpa_cli');
 const wpaSupplicantHelper = require('./helper/wpa-supplicant');
 const hostapd = require('wireless-tools/hostapd');
 
-var config = {
-  wpaSupplicantFilepath: '/etc/wpa_supplicant/wpa_supplicant.conf'
-};
+const config = require('dotenv').config().parsed;
 
 app
   .prepare()
@@ -20,7 +18,7 @@ app
     const server = express();
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
-    const wpaSupplicantConfig = await wpaSupplicantHelper.parseFile(config.wpaSupplicantFilepath);
+    const wpaSupplicantConfig = await wpaSupplicantHelper.parseFile(config.WPA_SUPPLICANT_PATH);
 
 
 
@@ -102,7 +100,7 @@ app
 
     server.listen(3000, err => {
       if (err) throw err
-      console.log('> Ready on http://localhost:3000')
+      console.log(`> Ready on ${config.APP_HOST}`)
     })
   })
   .catch(ex => {

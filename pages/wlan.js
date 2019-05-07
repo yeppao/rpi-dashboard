@@ -50,7 +50,7 @@ class Page extends React.Component {
     }
 
     async getCurrentStatus() {
-        const res = await fetch('http://localhost:3000/api/wlan/status');
+        const res = await fetch(`${process.env.APP_HOST}/api/wlan/status`);
         const wlanStatus = await res.json();
         /*const wlanStatus = {
             bssid: '2c:f5:d3:02:ea:d9',
