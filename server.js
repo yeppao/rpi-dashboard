@@ -7,6 +7,7 @@ const app = next({ dev })
 const handle = app.getRequestHandler()
 
 const wpa_cli = require('wireless-tools/wpa_cli');
+const wpa_supplicant = require('wireless-tools/wpa_supplicant');
 const wpaSupplicantHelper = require('./helper/wpa-supplicant');
 const hostapd = require('wireless-tools/hostapd');
 
