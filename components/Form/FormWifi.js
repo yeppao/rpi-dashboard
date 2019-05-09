@@ -35,9 +35,14 @@ class FormWifi extends React.Component {
 
         return (
             <Form onSubmit={this.handleSubmit}>
-                {getFieldDecorator('network')(
+                {getFieldDecorator('network', { initialValue: this.props.results.find((network) => network.isCurrent === true) })(
                 <Radio.Group>
-                    {this.props.results.map((network) => <Radio style={radioStyle} key={network.bssid} value={network}>{network.ssid}</Radio>)}
+                    {this.props.results.map((network) => (
+                        <Radio 
+                            disabled={network.frequency === undefined} 
+                            style={radioStyle} 
+                            key={network.bssid} 
+                            value={network}>{network.ssid}</Radio>))}
                 </Radio.Group>
                 )}
                 {getFieldDecorator('passphrase')(

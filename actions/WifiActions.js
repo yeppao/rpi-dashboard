@@ -1,5 +1,3 @@
-import React from 'react';
-
 class WifiActions {
     static async scan() {
         const res = await fetch(`${process.env.APP_HOST}/api/wlan/scan`);
