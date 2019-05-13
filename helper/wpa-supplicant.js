@@ -1,8 +1,22 @@
 const fs = require('fs');
 const util = require('util');
 const readFile = util.promisify(fs.readFile);
+const child_process = require('child_process');
 
-module.exports.parseFile = parseFile;
+const wpaSupplicant = module.exports = {
+    parseFile: parseFile,
+    enable: enable,
+    disable: disable
+};
+
+async function enable(callback) {
+    return child_process.exec(`/sbin/wpa_supplicant -u -s -O /run/wpa_supplicant`, callback);
+}
+
+async function disable(callback) {
+    var command = 'kill `pgrep -f "^/sbin/wpa_supplicant.*"` || true';
+    return child_process.exec(command, callback);
+}
 
 async function parseContent(data) {
     return new Promise((resolve, reject) => {

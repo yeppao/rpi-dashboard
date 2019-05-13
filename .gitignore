@@ -25,6 +25,7 @@
 .npm
 .node_repl_history
 .next
+config.json
 
 lib-cov
 coverage

@@ -10,8 +10,9 @@ const child_process = require('child_process');
 const wpa_cli = require('wireless-tools/wpa_cli');
 const wpaCli = require('./helper/wpa-cli');
 const wpa_supplicant = require('wireless-tools/wpa_supplicant');
-const wpaSupplicantHelper = require('./helper/wpa-supplicant');
 const hostapd = require('wireless-tools/hostapd');
+const wpaConfigurator = require('./helper/wpa-configurator');
+const wpaSupplicant = require('./helper/wpa-supplicant');
 
 const config = require('dotenv').config().parsed;
 
@@ -21,7 +22,9 @@ app
     const server = express();
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
-    const wpaSupplicantConfig = await wpaSupplicantHelper.parseFile(config.WPA_SUPPLICANT_PATH);
+    const wpaSupplicantConfig = await wpaSupplicant.parseFile(config.WPA_SUPPLICANT_PATH);
+    const wpaConfig = await wpaConfigurator.getConfiguration();
+    wpaConfigurator.init();
 
     server.get('/docker/:id', (req, res) => {
       const actualPage = '/docker'
@@ -62,6 +65,8 @@ app
           const network = wpaNetworks.find((wpaNetwork) => wpaNetwork.ssid === body.network.ssid);
           console.log(network);
           wpa_cli.select_network('wlan0', network.id, (err, data) => {
+            wpaConfig.networkId = network.id;
+            wpaConfigurator.setConfiguration(wpaConfig);
             res.json({ success: true });
           });
         })
