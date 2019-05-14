@@ -11,10 +11,11 @@ const wpa_cli = require('wireless-tools/wpa_cli');
 const wpaCli = require('./helper/wpa-cli');
 const wpa_supplicant = require('wireless-tools/wpa_supplicant');
 const hostapd = require('wireless-tools/hostapd');
+const ifconfig = require('wireless-tools/ifconfig');
 const wpaConfigurator = require('./helper/wpa-configurator');
 const wpaSupplicant = require('./helper/wpa-supplicant');
 
-const config = require('dotenv').config().parsed;
+const globalConfig = require('dotenv').config().parsed;
 
 app
   .prepare()
@@ -22,7 +23,7 @@ app
     const server = express();
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
-    const wpaSupplicantConfig = await wpaSupplicant.parseFile(config.WPA_SUPPLICANT_PATH);
+    const wpaSupplicantConfig = await wpaSupplicant.parseFile(globalConfig.WPA_SUPPLICANT_PATH);
     const wpaConfig = await wpaConfigurator.getConfiguration();
     wpaConfigurator.init();
 
@@ -44,33 +45,8 @@ app
 
     server.post('/api/wlan/connect', (req, res) => {
       const body = req.body;
-
-      if (body.network.id) {
-        async () => {
-          await new Promise((resolve, reject) => {
-            wpa_cli.remove_network('wlan0', body.network.id, (err, data) => {
-              wpa_cli.save_config('wlan0', (err, data) => {
-                resolve(data);
-                console.log('remove and save', data);
-              });
-            });
-          });          
-        }        
-      }
-      const command = `wpa_passphrase "${body.network.ssid}" "${body.passphrase}" >> ${config.WPA_SUPPLICANT_PATH} && wpa_cli -i wlan0 reconfigure`;
-      child_process.exec(command, (err, stdout) => {
-        console.log(err, stdout);
-        wpaCli.list_networks('wlan0', (err, wpaNetworks) => {
-          console.log(wpaNetworks, body);
-          const network = wpaNetworks.find((wpaNetwork) => wpaNetwork.ssid === body.network.ssid);
-          console.log(network);
-          wpa_cli.select_network('wlan0', network.id, (err, data) => {
-            wpaConfig.networkId = network.id;
-            wpaConfigurator.setConfiguration(wpaConfig);
-            res.json({ success: true });
-          });
-        })
-      });
+      wpaConfigurator.connect(body);
+      res.json({ success: true });
     })
 
     server.get('/api/wlan/scan', (req, res) => {
@@ -129,9 +105,11 @@ app
       return handle(req, res)
     })
 
+    let interfaceStatus = await wpaConfigurator.getInterfaceStatus('wlan0');
+    process.env.APP_HOST = `http://${interfaceStatus.ipv4_address}:3000`;
     server.listen(3000, err => {
       if (err) throw err
-      console.log(`> Ready on ${config.APP_HOST}`)
+      console.log(`> Ready on ${process.env.APP_HOST}`);
     })
   })
   .catch(ex => {
