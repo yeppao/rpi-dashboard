@@ -6,6 +6,7 @@ const child_process = require('child_process');
 const wpaSupplicant = module.exports = {
     parseFile: parseFile,
     enable: enable,
+    enableAsync: enableAsync,
     disable: disable
 };
 
@@ -13,9 +14,21 @@ async function enable(callback) {
     return child_process.exec(`/sbin/wpa_supplicant -u -s -O /run/wpa_supplicant`, callback);
 }
 
+async function enableAsync() {
+    return new Promise((resolve, reject) => {
+        enable((err) => resolve({ success: true }));
+    });
+}
+
 async function disable(callback) {
     var command = 'kill `pgrep -f "^/sbin/wpa_supplicant.*"` || true';
     return child_process.exec(command, callback);
+}
+
+async function disableAsync() {
+    return new Promise((resolve, reject) => {
+        disable((err) => resolve({ success: true }));
+    });
 }
 
 async function parseContent(data) {

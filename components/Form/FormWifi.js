@@ -5,7 +5,7 @@ import {
     Button,
     Form
 } from 'antd';
-import fetch from 'isomorphic-unfetch';
+import { withWpaConfig } from '../Provider/WpaConfigProvider';
 
 class FormWifi extends React.Component {
     constructor(props) {
@@ -16,12 +16,19 @@ class FormWifi extends React.Component {
     handleSubmit = (e) => {
         e.preventDefault();
         const values = this.props.form.getFieldsValue();
-        fetch(`${process.env.APP_HOST}/api/wlan/connect`, {
+        values.network.passphrase = values.passphrase;
+        let wpaConfig = this.props.wpaConfig;
+        console.log(values, wpaConfig);
+        wpaConfig.config.network = values.network;
+        delete wpaConfig.config.dhcpcd;
+        wpaConfig.config.mode = 'client';
+        this.props.setWpaConfig(wpaConfig);
+        fetch(`${this.props.hostname}/api/wlan/config`, {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(values)
+            body: JSON.stringify(wpaConfig.config)
         }).then((response) => console.log(response));
     }
 
@@ -41,7 +48,7 @@ class FormWifi extends React.Component {
                         <Radio 
                             disabled={network.frequency === undefined} 
                             style={radioStyle} 
-                            key={network.bssid} 
+                            key={network.id ? network.id : network.bssid}
                             value={network}>{network.ssid}</Radio>))}
                 </Radio.Group>
                 )}
@@ -54,4 +61,4 @@ class FormWifi extends React.Component {
     }
 }
 
-export default Form.create({ name: 'form_wifi' })(FormWifi);
+export default Form.create({ name: 'form_wifi' })(withWpaConfig(FormWifi));

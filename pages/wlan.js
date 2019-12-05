@@ -18,10 +18,16 @@ import {
 import FormHotspot from '../components/Form/FormHotspot';
 import FormWifi from '../components/Form/FormWifi';
 import WifiActions from '../actions/WifiActions';
+import { withWpaConfig } from '../components/Provider/WpaConfigProvider';
 
 const { Title } = Typography;
 
 class Page extends React.Component {
+    async scan() {
+        const res = await fetch(`${this.props.hostname}/api/wlan/scan`);
+        return res.json();
+    }
+
     constructor(props) {
         super(props);
 
@@ -43,16 +49,20 @@ class Page extends React.Component {
                 rsn_pairwise: 'CCMP'
             },
             wlanStatus: null,
-            results: this.props.results
+            results: []
         };
-
-        this.getCurrentStatus();
+        this.scan().then(results => this.setState({ results: results }));
+        this.getConfig();
+        this.getCurrentStatus();        
     }
 
-    async getCurrentStatus() {
-        const res = await fetch(`${process.env.APP_HOST}/api/wlan/status`);
-        const wlanStatus = await res.json();
-        /*const wlanStatus = {
+    async getConfig() {
+        const res = await fetch(`${this.props.hostname}/api/wlan/config`);
+        const wlan = await res.json();
+        this.props.setWpaConfig(wlan);
+    }
+
+    /*const wlanStatus = {
             bssid: '2c:f5:d3:02:ea:d9',
             frequency: 2412,
             mode: 'station',
@@ -67,21 +77,23 @@ class Page extends React.Component {
             uuid: 'e1cda789-8c88-53e8-ffff-31c304580c1e',
             id: 0
         }*/
+    async getCurrentStatus() {
+        const res = await fetch(`${this.props.hostname}/api/wlan/status`);
+        const wlanStatus = await res.json();    
+
         this.setState({ wlanStatus: wlanStatus });
-    }
-
-    static async getInitialProps() {
-        const data = await WifiActions.scan();
-
-        return {
-            results: data
-        }
-    }
+    }    
 
     refreshWifi = async () => {
-        const data = await WifiActions.scan();
+        const data = await this.scan();
 
         this.setState({ results: data });
+    }
+
+    handleTabChange = (activeKey) => {
+        const { wpaConfig } = this.props;
+        wpaConfig.config.mode = activeKey;
+        this.props.setWpaConfig(wpaConfig);
     }
 
     render() {
@@ -116,12 +128,12 @@ class Page extends React.Component {
                         </Row>
                     </React.Fragment>)}
 
-                <Tabs defaultActiveKey="1">
-                    <Tabs.TabPane tab={<span><Icon type="apple" />Hotspot</span>} key="1">
+                <Tabs activeKey={this.props.wpaConfig && this.props.wpaConfig.config && this.props.wpaConfig.config.mode} onChange={this.handleTabChange}>
+                    <Tabs.TabPane tab={<span><Icon type="apple" />Hotspot</span>} key="hotspot">
                         <Title level={4}>HOSTAPD configuration</Title>                        
                         <FormHotspot values={this.state.wlanConfig} />
                     </Tabs.TabPane>
-                    <Tabs.TabPane tab={<span><Icon type="android" />Join</span>} key="2">
+                    <Tabs.TabPane tab={<span><Icon type="android" />Join</span>} key="client">
                         <Title level={4}>WIFI Configuration</Title>
                         <Button icon="reload" onClick={this.refreshWifi}>Actualiser</Button>
                         <FormWifi results={this.state.results} />
@@ -132,4 +144,4 @@ class Page extends React.Component {
     }
 }
 
-export default withRouter(Page);
+export default withWpaConfig(withRouter(Page));

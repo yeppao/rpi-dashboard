@@ -1,25 +1,15 @@
 {
     "mode": "hotspot",
-    "services": {
-        "hostapd": {
-            "enabled": true,
-            "options": {
-                "channel": 7,
-                "driver": "nl80211",
-                "hw_mode": "g",
-                "interface": "wlan0",
-                "ssid": "NadiaSuite",
-                "wpa": 2,
-                "wpa_passphrase": "YouNeedToChangeNadia"
-            }
-        },
-        "dhcpcd": {
-            "enabled": true,
-            "options": {
-                "interface": "wlan0",
-                "ip_address": "192.168.4.1/24",
-                "nohook": "wpa_supplicant"
-            }
-        }
+    "network": {
+        "ssid": "NadiaSuite",
+        "mode": 2,
+        "key_mgmt": "WPA-PSK",
+        "psk": "YouNeedToChangeNadia",
+        "frequency": 2437
+    },
+    "dhcpcd": {
+        "interface": "wlan0",
+        "ip_address": "192.168.4.1/24",
+        "nohook": "wpa_supplicant"
     }
 }
